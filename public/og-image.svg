@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#F5EDE3"/>
+
+  <!-- Amber accent bar at top -->
+  <rect width="1200" height="6" fill="#C17F4E"/>
+
+  <!-- Left amber accent stripe -->
+  <rect x="80" y="180" width="4" height="270" rx="2" fill="#C17F4E"/>
+
+  <!-- Name -->
+  <text x="110" y="260" font-family="Georgia, 'Times New Roman', serif"
+        font-weight="bold" font-size="72" fill="#2D2520">Yedi Balian</text>
+
+  <!-- Subtitle -->
+  <text x="110" y="330" font-family="Georgia, 'Times New Roman', serif"
+        font-size="36" fill="#C17F4E">10-Weekend AI Resolution</text>
+
+  <!-- Tagline -->
+  <text x="110" y="400" font-family="Arial, Helvetica, sans-serif"
+        font-size="24" fill="#6B5E54">Building AI fluency, one project at a time.</text>
+
+  <!-- Decorative dots -->
+  <circle cx="110" cy="450" r="4" fill="#C17F4E" opacity="0.5"/>
+  <circle cx="130" cy="450" r="4" fill="#C17F4E" opacity="0.35"/>
+  <circle cx="150" cy="450" r="4" fill="#C17F4E" opacity="0.2"/>
+
+  <!-- Amber accent bar at bottom -->
+  <rect y="624" width="1200" height="6" fill="#C17F4E"/>
+</svg>

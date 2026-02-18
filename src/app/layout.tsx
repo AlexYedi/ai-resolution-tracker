@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
@@ -27,18 +27,45 @@ const jetbrains = JetBrains_Mono({
   display: "swap",
 });
 
+export const viewport: Viewport = {
+  themeColor: "#C17F4E",
+};
+
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://yedibalian.com"
+  ),
   title: {
     default: "Yedi Balian — 10-Weekend AI Resolution",
     template: "%s — Yedi Balian",
   },
   description:
     "Portfolio and progress tracker for the 10-Weekend AI Fluency Resolution.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "AI Resolution",
+  },
   openGraph: {
     title: "Yedi Balian — 10-Weekend AI Resolution",
     description:
       "Portfolio and progress tracker for the 10-Weekend AI Fluency Resolution.",
     type: "website",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Yedi Balian — 10-Weekend AI Resolution",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Yedi Balian — 10-Weekend AI Resolution",
+    description: "Building AI fluency, one project at a time.",
+    images: ["/og-image.png"],
   },
 };
 
