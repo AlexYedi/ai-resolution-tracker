@@ -86,9 +86,9 @@ export default function IterationPageClient({
           {isAdmin && (
             <button
               onClick={() => setIsEditing(true)}
-              className="text-amber hover:text-amber-dark text-sm font-semibold transition-colors"
+              className="bg-amber/10 text-amber hover:bg-amber/20 hover:text-amber-dark text-sm font-semibold transition-colors px-3 py-1 rounded-lg border border-amber/30"
             >
-              Edit
+              Edit Iteration
             </button>
           )}
         </div>
