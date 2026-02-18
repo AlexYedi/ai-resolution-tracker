@@ -28,9 +28,18 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Yedi Balian — 10-Weekend AI Resolution",
+  title: {
+    default: "Yedi Balian — 10-Weekend AI Resolution",
+    template: "%s — Yedi Balian",
+  },
   description:
     "Portfolio and progress tracker for the 10-Weekend AI Fluency Resolution.",
+  openGraph: {
+    title: "Yedi Balian — 10-Weekend AI Resolution",
+    description:
+      "Portfolio and progress tracker for the 10-Weekend AI Fluency Resolution.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

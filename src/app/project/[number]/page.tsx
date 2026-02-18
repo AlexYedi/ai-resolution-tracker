@@ -1,74 +1,188 @@
-import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
-import type { Project } from "@/lib/types";
+import type { Metadata } from "next";
+import { getProjectByNumber } from "@/lib/data";
+import { createClient } from "@/lib/supabase/server";
+import Breadcrumb from "@/components/ui/Breadcrumb";
+import TimelineNode from "@/components/ui/TimelineNode";
+import type { ChecklistItem } from "@/lib/types";
 
-export default async function ProjectDetailPage({
-  params,
-}: {
+type Props = {
   params: { number: string };
-}) {
-  const supabase = createClient();
-  const projectNumber = parseInt(params.number, 10);
+};
 
-  const { data: project } = await supabase
-    .from("projects")
-    .select("*")
-    .eq("number", projectNumber)
-    .single();
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const project = await getProjectByNumber(Number(params.number));
+  if (!project) return { title: "Project Not Found" };
+  const label =
+    project.number === 0 ? "Bonus" : `Weekend ${project.number}`;
+  return {
+    title: `${label}: ${project.title}`,
+    description: project.deliverable || project.subtitle,
+  };
+}
+
+export default async function ProjectDetailPage({ params }: Props) {
+  const projectNumber = parseInt(params.number, 10);
+  const project = await getProjectByNumber(projectNumber);
 
   if (!project) {
     notFound();
   }
 
-  const typedProject = project as Project;
+  // Get per-iteration checklist counts for timeline nodes
+  const supabase = createClient();
+  const iterationIds = project.iterations.map((i) => i.id);
+  const checklistByIteration: Record<
+    string,
+    { total: number; completed: number }
+  > = {};
+
+  if (iterationIds.length > 0) {
+    const { data: checklistItems } = await supabase
+      .from("checklist_items")
+      .select("*")
+      .in("iteration_id", iterationIds);
+
+    const items = (checklistItems ?? []) as ChecklistItem[];
+    for (const id of iterationIds) {
+      const iterItems = items.filter((c) => c.iteration_id === id);
+      checklistByIteration[id] = {
+        total: iterItems.length,
+        completed: iterItems.filter((c) => c.is_checked).length,
+      };
+    }
+  }
+
+  const weekendLabel =
+    project.number === 0 ? "BONUS" : `WEEKEND ${project.number}`;
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-12">
-      <div className="mb-8">
-        <span className="font-mono text-amber text-sm font-medium">
-          Weekend{" "}
-          {typedProject.number === 0
-            ? "Bonus"
-            : String(typedProject.number).padStart(2, "0")}
-        </span>
-        <h1 className="font-display text-3xl font-bold text-text-primary mt-1 mb-2">
-          {typedProject.title}
-        </h1>
-        <p className="text-lg text-text-muted font-body">
-          {typedProject.subtitle}
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      {/* Breadcrumb */}
+      <Breadcrumb
+        items={[
+          { label: "Projects", href: "/" },
+          {
+            label:
+              project.number === 0
+                ? "Bonus"
+                : `Weekend ${project.number}`,
+          },
+        ]}
+      />
+
+      {/* Header */}
+      <section className="mb-10">
+        <p className="text-xs uppercase tracking-widest text-amber font-semibold font-body mb-2">
+          {weekendLabel}
         </p>
-      </div>
+        <h1 className="font-display text-3xl sm:text-4xl font-black text-text-primary mb-2">
+          {project.title}
+        </h1>
+        <p className="font-display text-xl text-text-muted mb-6">
+          {project.subtitle}
+        </p>
 
-      <div className="space-y-6">
-        {typedProject.deliverable && (
-          <div className="bg-card rounded-xl p-6 shadow-warm border border-border">
-            <h2 className="font-display text-lg font-bold text-text-primary mb-2">
-              Deliverable
-            </h2>
-            <p className="text-text-body font-body">{typedProject.deliverable}</p>
-          </div>
-        )}
-
-        {typedProject.done_when && (
-          <div className="bg-sage-wash rounded-xl p-6 border border-sage/20">
-            <h2 className="font-display text-lg font-bold text-sage-dark mb-2">
-              Done When
-            </h2>
-            <p className="text-text-body font-body">{typedProject.done_when}</p>
-          </div>
-        )}
-
-        {typedProject.why_it_matters && (
-          <div className="bg-amber-wash rounded-xl p-6 border border-amber/20">
-            <h2 className="font-display text-lg font-bold text-amber-dark mb-2">
-              Why It Matters
-            </h2>
-            <p className="text-text-body font-body">
-              {typedProject.why_it_matters}
+        {/* Deliverable card */}
+        {project.deliverable && (
+          <div className="bg-sage-wash border border-sage/20 rounded-xl p-6">
+            <p className="text-xs uppercase tracking-widest text-sage-dark font-bold font-body mb-2">
+              The Deliverable
+            </p>
+            <p className="font-display text-lg text-text-primary">
+              {project.deliverable}
             </p>
           </div>
         )}
-      </div>
+      </section>
+
+      {/* Two-column content */}
+      <section className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-12">
+        {/* Left column — wider */}
+        <div className="lg:col-span-3 space-y-6">
+          {project.description_work && (
+            <div>
+              <h2 className="font-display text-2xl font-bold text-text-primary mb-3">
+                The Work
+              </h2>
+              <p className="text-text-body font-body leading-relaxed whitespace-pre-line">
+                {project.description_work}
+              </p>
+            </div>
+          )}
+
+          {project.done_when && (
+            <div className="bg-amber-wash border border-amber/20 rounded-xl p-6">
+              <p className="text-xs uppercase tracking-widest text-amber-dark font-bold font-body mb-2">
+                Done When
+              </p>
+              <p className="text-text-body font-body leading-relaxed">
+                {project.done_when}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Right column */}
+        <div className="lg:col-span-2 space-y-6">
+          {project.description_advanced && (
+            <div className="bg-paper rounded-xl p-6 border border-border">
+              <h2 className="text-xs uppercase tracking-widest text-text-muted font-bold font-body mb-3">
+                Advanced
+              </h2>
+              <p className="text-text-body font-body leading-relaxed whitespace-pre-line">
+                {project.description_advanced}
+              </p>
+            </div>
+          )}
+
+          {project.why_it_matters && (
+            <div>
+              <h2 className="text-xs uppercase tracking-widest text-text-muted font-bold font-body mb-3">
+                Why It Matters
+              </h2>
+              <p className="font-display italic text-text-body leading-relaxed">
+                {project.why_it_matters}
+              </p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Iterations Timeline */}
+      <section>
+        <h2 className="font-display text-2xl font-bold text-text-primary mb-6">
+          Iterations
+        </h2>
+
+        {project.iterations.length > 0 ? (
+          <div className="ml-2">
+            {project.iterations.map((iteration, index) => (
+              <TimelineNode
+                key={iteration.id}
+                iteration={iteration}
+                projectNumber={project.number}
+                totalChecklistItems={
+                  checklistByIteration[iteration.id]?.total ?? 0
+                }
+                completedChecklistItems={
+                  checklistByIteration[iteration.id]?.completed ?? 0
+                }
+                isLast={index === project.iterations.length - 1}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="bg-paper rounded-xl p-8 text-center border border-border">
+            <p className="text-text-muted font-body">
+              No iterations yet.
+            </p>
+            <p className="text-text-caption font-body text-sm mt-1">
+              This project hasn&rsquo;t been started.
+            </p>
+          </div>
+        )}
+      </section>
     </div>
   );
 }

@@ -56,3 +56,20 @@ export type TimeLog = {
   duration_minutes: number | null;
   note: string | null;
 };
+
+// Phase 2 enriched types
+
+export interface ProjectWithProgress extends Project {
+  iterations: Iteration[];
+  totalChecklistItems: number;
+  completedChecklistItems: number;
+  totalTimeMinutes: number;
+  completedIterations: number;
+  inProgressIterations: number;
+}
+
+export interface IterationWithDetails extends Iteration {
+  project: Project;
+  checklistItems: ChecklistItem[];
+  timeLogs: TimeLog[];
+}

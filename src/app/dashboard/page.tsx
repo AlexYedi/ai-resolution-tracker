@@ -1,7 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import ProgressBar from "@/components/ui/ProgressBar";
+import type { Metadata } from "next";
 import type { Project } from "@/lib/types";
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+};
 
 export default async function DashboardPage() {
   const supabase = createClient();
@@ -40,10 +45,22 @@ export default async function DashboardPage() {
       </section>
 
       <div className="bg-card rounded-xl p-6 shadow-warm border border-border mb-8">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-body font-medium text-text-body">
+            Overall Progress
+          </span>
+          <span className="text-sm font-mono text-text-muted">
+            {completedCount} / {totalIterations}
+          </span>
+        </div>
         <ProgressBar
-          value={completedCount}
-          max={totalIterations || 1}
-          label="Overall Progress"
+          value={
+            totalIterations > 0
+              ? (completedCount / totalIterations) * 100
+              : 0
+          }
+          size="md"
+          showLabel
         />
       </div>
 
