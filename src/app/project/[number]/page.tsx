@@ -1,13 +1,16 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getProjectByNumber } from "@/lib/data";
+import { getIsAdmin } from "@/lib/actions";
 import { createClient } from "@/lib/supabase/server";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import TimelineNode from "@/components/ui/TimelineNode";
+import CreateIterationForm from "@/components/admin/CreateIterationForm";
 import type { ChecklistItem } from "@/lib/types";
 
 type Props = {
   params: { number: string };
+  searchParams: { [key: string]: string | string[] | undefined };
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -21,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function ProjectDetailPage({ params }: Props) {
+export default async function ProjectDetailPage({ params, searchParams }: Props) {
   const projectNumber = parseInt(params.number, 10);
   const project = await getProjectByNumber(projectNumber);
 
@@ -52,6 +55,9 @@ export default async function ProjectDetailPage({ params }: Props) {
       };
     }
   }
+
+  const isAdmin = await getIsAdmin();
+  const autoOpenNew = searchParams?.new === "1";
 
   const weekendLabel =
     project.number === 0 ? "BONUS" : `WEEKEND ${project.number}`;
@@ -180,6 +186,13 @@ export default async function ProjectDetailPage({ params }: Props) {
             <p className="text-text-caption font-body text-sm mt-1">
               This project hasn&rsquo;t been started.
             </p>
+          </div>
+        )}
+
+        {/* Admin: Create Iteration */}
+        {isAdmin && (
+          <div className="mt-6">
+            <CreateIterationForm projectId={project.id} defaultOpen={autoOpenNew} />
           </div>
         )}
       </section>
