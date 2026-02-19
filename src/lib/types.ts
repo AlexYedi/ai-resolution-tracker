@@ -57,6 +57,18 @@ export type TimeLog = {
   note: string | null;
 };
 
+export type IterationAsset = {
+  id: string;
+  iteration_id: string;
+  file_url: string;
+  file_name: string;
+  file_type: string;
+  file_size: number | null;
+  caption: string | null;
+  sort_order: number;
+  created_at: string;
+};
+
 // Phase 2 enriched types
 
 export interface ProjectWithProgress extends Project {
@@ -72,4 +84,5 @@ export interface IterationWithDetails extends Iteration {
   project: Project;
   checklistItems: ChecklistItem[];
   timeLogs: TimeLog[];
+  assets: IterationAsset[];
 }

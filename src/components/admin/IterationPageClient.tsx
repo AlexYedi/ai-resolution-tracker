@@ -5,10 +5,12 @@ import ProgressBar from "@/components/ui/ProgressBar";
 import StatusBadge from "@/components/ui/StatusBadge";
 import InteractiveChecklist from "@/components/admin/InteractiveChecklist";
 import EditIterationForm from "@/components/admin/EditIterationForm";
+import AssetGallery from "@/components/ui/AssetGallery";
 import { formatMinutes } from "@/lib/data-client";
 import type {
   ChecklistItem,
   TimeLog,
+  IterationAsset,
   Project,
   Iteration,
 } from "@/lib/types";
@@ -18,6 +20,7 @@ type Props = {
   project: Project;
   checklistItems: ChecklistItem[];
   timeLogs: TimeLog[];
+  assets: IterationAsset[];
   isAdmin: boolean;
 };
 
@@ -26,6 +29,7 @@ export default function IterationPageClient({
   project,
   checklistItems,
   timeLogs,
+  assets,
   isAdmin,
 }: Props) {
   const [isEditing, setIsEditing] = useState(false);
@@ -67,6 +71,7 @@ export default function IterationPageClient({
         }}
         checkedItemCount={initialCompleted}
         totalItemCount={totalTasks}
+        assets={assets}
         onCancel={() => setIsEditing(false)}
       />
     );
@@ -187,6 +192,9 @@ export default function IterationPageClient({
           </details>
         )}
       </section>
+
+      {/* Attachments */}
+      <AssetGallery assets={assets} />
 
       {/* Time Tracking */}
       {timeLogs.length > 0 && (

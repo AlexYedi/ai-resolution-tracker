@@ -4,6 +4,7 @@ import type {
   Iteration,
   ChecklistItem,
   TimeLog,
+  IterationAsset,
   ProjectWithProgress,
   IterationWithDetails,
 } from "@/lib/types";
@@ -146,11 +147,19 @@ export async function getIterationWithDetails(
     .eq("iteration_id", id)
     .order("started_at", { ascending: true });
 
+  const { data: assets } = await supabase
+    .from("iteration_assets")
+    .select("*")
+    .eq("iteration_id", id)
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+
   return {
     ...typedIteration,
     project: project as Project,
     checklistItems: (checklistItems ?? []) as ChecklistItem[],
     timeLogs: (timeLogs ?? []) as TimeLog[],
+    assets: (assets ?? []) as IterationAsset[],
   };
 }
 

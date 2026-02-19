@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { updateIteration } from "@/lib/actions";
 import AdminBar from "@/components/admin/AdminBar";
 import DeleteIterationButton from "@/components/admin/DeleteIterationButton";
-import type { IterationStatus } from "@/lib/types";
+import AssetUploader from "@/components/admin/AssetUploader";
+import type { IterationStatus, IterationAsset } from "@/lib/types";
 
 type Props = {
   iterationId: string;
@@ -20,6 +21,7 @@ type Props = {
   };
   checkedItemCount: number;
   totalItemCount: number;
+  assets: IterationAsset[];
   onCancel: () => void;
 };
 
@@ -29,6 +31,7 @@ export default function EditIterationForm({
   initialValues,
   checkedItemCount,
   totalItemCount,
+  assets,
   onCancel,
 }: Props) {
   const [versionLabel, setVersionLabel] = useState(initialValues.versionLabel);
@@ -188,6 +191,9 @@ export default function EditIterationForm({
           here.
         </p>
       </div>
+
+      {/* Attachments */}
+      <AssetUploader iterationId={iterationId} existingAssets={assets} />
 
       {/* Time Spent */}
       <div>

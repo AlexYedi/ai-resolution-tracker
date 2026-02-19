@@ -228,6 +228,111 @@ export async function createTimeLog(data: {
   }
 }
 
+// ── Iteration assets ─────────────────────────────────────────────────
+
+export async function createIterationAsset(data: {
+  iterationId: string;
+  fileUrl: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  caption?: string;
+}): Promise<{ id: string } | { error: string }> {
+  try {
+    const { supabase } = await requireAdmin();
+
+    // Get next sort_order
+    const { data: existing } = await supabase
+      .from("iteration_assets")
+      .select("sort_order")
+      .eq("iteration_id", data.iterationId)
+      .order("sort_order", { ascending: false })
+      .limit(1);
+
+    const nextSortOrder =
+      existing && existing.length > 0 ? existing[0].sort_order + 1 : 0;
+
+    const { data: asset, error } = await supabase
+      .from("iteration_assets")
+      .insert({
+        iteration_id: data.iterationId,
+        file_url: data.fileUrl,
+        file_name: data.fileName,
+        file_type: data.fileType,
+        file_size: data.fileSize,
+        caption: data.caption || null,
+        sort_order: nextSortOrder,
+      })
+      .select("id")
+      .single();
+
+    if (error) return { error: error.message };
+    if (!asset) return { error: "Failed to create asset" };
+
+    revalidatePath("/");
+    return { id: asset.id };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export async function updateAssetCaption(
+  assetId: string,
+  caption: string
+): Promise<{ success: boolean } | { error: string }> {
+  try {
+    const { supabase } = await requireAdmin();
+
+    const { error } = await supabase
+      .from("iteration_assets")
+      .update({ caption })
+      .eq("id", assetId);
+
+    if (error) return { error: error.message };
+    return { success: true };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export async function deleteIterationAsset(
+  assetId: string
+): Promise<{ success: boolean } | { error: string }> {
+  try {
+    const { supabase } = await requireAdmin();
+
+    // Fetch asset to get file_url for storage deletion
+    const { data: asset } = await supabase
+      .from("iteration_assets")
+      .select("file_url")
+      .eq("id", assetId)
+      .single();
+
+    if (!asset) return { error: "Asset not found" };
+
+    // Extract storage path from public URL
+    // URL format: .../storage/v1/object/public/iteration-assets/{path}
+    const urlParts = asset.file_url.split("/iteration-assets/");
+    if (urlParts.length === 2) {
+      const storagePath = urlParts[1];
+      await supabase.storage.from("iteration-assets").remove([storagePath]);
+    }
+
+    // Delete the database row
+    const { error } = await supabase
+      .from("iteration_assets")
+      .delete()
+      .eq("id", assetId);
+
+    if (error) return { error: error.message };
+
+    revalidatePath("/");
+    return { success: true };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
 // ── Auth check helper (for server components) ────────────────────────
 
 export async function getIsAdmin(): Promise<boolean> {

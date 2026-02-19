@@ -61,6 +61,7 @@ export default async function IterationDetailPage({ params }: PageProps) {
         project={iteration.project}
         checklistItems={iteration.checklistItems}
         timeLogs={iteration.timeLogs}
+        assets={iteration.assets}
         isAdmin={isAdmin}
       />
     </div>
