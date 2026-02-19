@@ -13,6 +13,7 @@ import type {
   IterationAsset,
   Project,
   Iteration,
+  IterationStatus,
 } from "@/lib/types";
 
 type Props = {
@@ -36,6 +37,7 @@ export default function IterationPageClient({
   const totalTasks = checklistItems.length;
   const initialCompleted = checklistItems.filter((c) => c.is_checked).length;
   const [completedTasks, setCompletedTasks] = useState(initialCompleted);
+  const [currentStatus, setCurrentStatus] = useState<IterationStatus>(iteration.status);
 
   const progressPercent =
     totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
@@ -49,12 +51,13 @@ export default function IterationPageClient({
       ? iteration.time_spent_minutes
       : totalLoggedMinutes;
 
-  const handleProgressChange = useCallback(
-    (completed: number) => {
-      setCompletedTasks(completed);
-    },
-    []
-  );
+  const handleProgressChange = useCallback((completed: number) => {
+    setCompletedTasks(completed);
+  }, []);
+
+  const handleStatusChange = useCallback((newStatus: IterationStatus) => {
+    setCurrentStatus(newStatus);
+  }, []);
 
   if (isEditing) {
     return (
@@ -86,7 +89,7 @@ export default function IterationPageClient({
             <span className="font-mono text-amber text-xs font-medium uppercase tracking-widest">
               Weekend {project.number}
             </span>
-            <StatusBadge status={iteration.status} />
+            <StatusBadge status={currentStatus} />
           </div>
           {isAdmin && (
             <button
@@ -140,7 +143,9 @@ export default function IterationPageClient({
             items={checklistItems}
             iterationId={iteration.id}
             isAdmin={isAdmin}
+            currentStatus={currentStatus}
             onProgressChange={handleProgressChange}
+            onStatusChange={handleStatusChange}
           />
         ) : iteration.plan_markdown ? (
           <div className="bg-card rounded-xl border border-border p-6">

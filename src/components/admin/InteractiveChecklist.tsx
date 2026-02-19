@@ -2,13 +2,15 @@
 
 import { useState, useCallback } from "react";
 import { toggleChecklistItem } from "@/lib/actions";
-import type { ChecklistItem } from "@/lib/types";
+import type { ChecklistItem, IterationStatus } from "@/lib/types";
 
 type Props = {
   items: ChecklistItem[];
   iterationId: string;
   isAdmin: boolean;
+  currentStatus: IterationStatus;
   onProgressChange?: (completed: number) => void;
+  onStatusChange?: (newStatus: IterationStatus) => void;
 };
 
 function groupByPhase(items: ChecklistItem[]) {
@@ -27,10 +29,29 @@ function groupByPhase(items: ChecklistItem[]) {
   return groups;
 }
 
+function computeOptimisticStatus(
+  items: ChecklistItem[],
+  currentStatus: IterationStatus
+): IterationStatus | null {
+  const total = items.length;
+  if (total === 0) return null;
+  const checkedCount = items.filter((i) => i.is_checked).length;
+  if (checkedCount === total) {
+    return currentStatus !== "complete" ? "complete" : null;
+  } else if (checkedCount > 0) {
+    return currentStatus === "complete" || currentStatus === "not_started"
+      ? "in_progress"
+      : null;
+  }
+  return null;
+}
+
 export default function InteractiveChecklist({
   items: initialItems,
   isAdmin,
+  currentStatus,
   onProgressChange,
+  onStatusChange,
 }: Props) {
   const [items, setItems] = useState<ChecklistItem[]>(initialItems);
 
@@ -38,36 +59,42 @@ export default function InteractiveChecklist({
     async (itemId: string) => {
       if (!isAdmin) return;
 
-      // Optimistic update
-      setItems((prev) => {
-        const updated = prev.map((item) =>
-          item.id === itemId ? { ...item, is_checked: !item.is_checked } : item
-        );
-        // Notify parent of progress change
-        const completed = updated.filter((i) => i.is_checked).length;
-        onProgressChange?.(completed);
-        return updated;
-      });
-
       // Find current state before toggle
       const item = items.find((i) => i.id === itemId);
       if (!item) return;
+
+      // Optimistic update
+      const optimisticItems = items.map((i) =>
+        i.id === itemId ? { ...i, is_checked: !i.is_checked } : i
+      );
+      setItems(optimisticItems);
+      const completed = optimisticItems.filter((i) => i.is_checked).length;
+      onProgressChange?.(completed);
+
+      // Compute optimistic status change
+      const optimisticStatus = computeOptimisticStatus(optimisticItems, currentStatus);
+      if (optimisticStatus) {
+        onStatusChange?.(optimisticStatus);
+      }
 
       const newChecked = !item.is_checked;
       const result = await toggleChecklistItem(itemId, newChecked);
 
       if ("error" in result) {
         // Revert on error
-        setItems((prev) =>
-          prev.map((i) =>
-            i.id === itemId ? { ...i, is_checked: item.is_checked } : i
-          )
-        );
+        setItems(items);
         const reverted = items.filter((i) => i.is_checked).length;
         onProgressChange?.(reverted);
+        // Revert status too
+        if (optimisticStatus) {
+          onStatusChange?.(currentStatus);
+        }
+      } else if ("newStatus" in result && result.newStatus && result.newStatus !== optimisticStatus) {
+        // Server returned a different status — apply it
+        onStatusChange?.(result.newStatus);
       }
     },
-    [isAdmin, items, onProgressChange]
+    [isAdmin, items, currentStatus, onProgressChange, onStatusChange]
   );
 
   const phaseGroups = groupByPhase(items);

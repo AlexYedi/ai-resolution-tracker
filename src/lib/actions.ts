@@ -119,6 +119,22 @@ export async function updateIteration(data: {
 
     // Re-parse plan if changed
     if (data.planMarkdownChanged && data.planMarkdown !== undefined) {
+      // If iteration was complete, adding new items should revert to in_progress
+      // (unless the caller already set status explicitly)
+      if (data.status === undefined) {
+        const { data: currentIteration } = await supabase
+          .from("iterations")
+          .select("status")
+          .eq("id", data.id)
+          .single();
+        if (currentIteration?.status === "complete") {
+          await supabase
+            .from("iterations")
+            .update({ status: "in_progress" })
+            .eq("id", data.id);
+        }
+      }
+
       // Delete existing checklist items
       await supabase
         .from("checklist_items")
@@ -175,11 +191,22 @@ export async function deleteIteration(
 export async function toggleChecklistItem(
   itemId: string,
   checked: boolean
-): Promise<{ success: boolean } | { error: string }> {
+): Promise<{ success: boolean; newStatus?: IterationStatus } | { error: string }> {
   try {
     const { supabase, userId } = await requireAdmin();
 
-    const { error } = await supabase
+    // Fetch the checklist item to get iteration_id
+    const { data: item } = await supabase
+      .from("checklist_items")
+      .select("iteration_id")
+      .eq("id", itemId)
+      .single();
+
+    if (!item) return { error: "Checklist item not found" };
+    const iterationId = item.iteration_id as string;
+
+    // Toggle the checkbox
+    const { error: toggleError } = await supabase
       .from("checklist_items")
       .update({
         is_checked: checked,
@@ -188,10 +215,58 @@ export async function toggleChecklistItem(
       })
       .eq("id", itemId);
 
-    if (error) return { error: error.message };
+    if (toggleError) return { error: toggleError.message };
 
-    // Don't revalidatePath here — optimistic UI handles it
-    return { success: true };
+    // Count total and checked items for this iteration (post-toggle)
+    const { data: countData } = await supabase
+      .from("checklist_items")
+      .select("is_checked")
+      .eq("iteration_id", iterationId);
+
+    const allItems = countData ?? [];
+    const total = allItems.length;
+    const checkedCount = allItems.filter((i) => i.is_checked).length;
+
+    // Fetch current iteration status
+    const { data: iteration } = await supabase
+      .from("iterations")
+      .select("status")
+      .eq("id", iterationId)
+      .single();
+
+    const currentStatus = iteration?.status as IterationStatus | undefined;
+
+    // Apply auto-status rules
+    let newStatus: IterationStatus | null = null;
+
+    if (total === 0) {
+      // No checklist items — no auto-change
+    } else if (checkedCount === total) {
+      // All checked → complete
+      if (currentStatus !== "complete") {
+        newStatus = "complete";
+      }
+    } else if (checkedCount > 0) {
+      // Some checked
+      if (currentStatus === "complete" || currentStatus === "not_started") {
+        newStatus = "in_progress";
+      }
+    }
+    // checkedCount === 0: don't revert to not_started
+
+    if (newStatus) {
+      console.error(
+        `[toggleChecklistItem] Updating iteration ${iterationId} status: ${currentStatus} → ${newStatus} (${checkedCount}/${total} checked)`
+      );
+      await supabase
+        .from("iterations")
+        .update({ status: newStatus })
+        .eq("id", iterationId);
+    }
+
+    revalidatePath("/");
+
+    return { success: true, newStatus: newStatus ?? undefined };
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Unknown error" };
   }
