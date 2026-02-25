@@ -10,7 +10,7 @@
 
   <!-- Name -->
   <text x="110" y="260" font-family="Georgia, 'Times New Roman', serif"
-        font-weight="bold" font-size="72" fill="#2D2520">Yedi Balian</text>
+        font-weight="bold" font-size="72" fill="#2D2520">Yedibalian</text>
 
   <!-- Subtitle -->
   <text x="110" y="330" font-family="Georgia, 'Times New Roman', serif"

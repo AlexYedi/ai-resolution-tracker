@@ -16,6 +16,7 @@ export type Project = {
   deliverable: string | null;
   done_when: string | null;
   why_it_matters: string | null;
+  illustration_url: string | null;
   sort_order: number;
   created_at: string;
 };

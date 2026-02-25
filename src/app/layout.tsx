@@ -36,8 +36,8 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://yedibalian.com"
   ),
   title: {
-    default: "Yedi Balian — 10-Weekend AI Resolution",
-    template: "%s — Yedi Balian",
+    default: "Yedibalian — 10-Weekend AI Resolution",
+    template: "%s — Yedibalian",
   },
   description:
     "Portfolio and progress tracker for the 10-Weekend AI Fluency Resolution.",
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     title: "AI Resolution",
   },
   openGraph: {
-    title: "Yedi Balian — 10-Weekend AI Resolution",
+    title: "Yedibalian — 10-Weekend AI Resolution",
     description:
       "Portfolio and progress tracker for the 10-Weekend AI Fluency Resolution.",
     type: "website",
@@ -57,13 +57,13 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Yedi Balian — 10-Weekend AI Resolution",
+        alt: "Yedibalian — 10-Weekend AI Resolution",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Yedi Balian — 10-Weekend AI Resolution",
+    title: "Yedibalian — 10-Weekend AI Resolution",
     description: "Building AI fluency, one project at a time.",
     images: ["/og-image.png"],
   },

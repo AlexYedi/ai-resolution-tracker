@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import Image from "next/image";
 import { getProjectByNumber } from "@/lib/data";
 import { getIsAdmin } from "@/lib/actions";
 import { createClient } from "@/lib/supabase/server";
@@ -76,6 +77,21 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
           },
         ]}
       />
+
+      {/* Hero illustration banner */}
+      {project.illustration_url && (
+        <div className="relative w-full h-56 md:h-72 rounded-2xl overflow-hidden mb-8">
+          <Image
+            src={project.illustration_url}
+            alt={project.title}
+            fill
+            className="object-cover"
+            priority
+            sizes="(max-width: 1280px) 100vw, 1280px"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-canvas/60 to-transparent" />
+        </div>
+      )}
 
       {/* Header */}
       <section className="mb-10">

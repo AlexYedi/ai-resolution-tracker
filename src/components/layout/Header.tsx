@@ -32,7 +32,7 @@ export default function Header() {
           href="/"
           className="font-display text-xl font-bold text-text-primary hover:text-amber transition-colors"
         >
-          Yedi Balian
+          Yedibalian
         </Link>
 
         {/* Desktop nav */}

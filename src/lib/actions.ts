@@ -255,9 +255,6 @@ export async function toggleChecklistItem(
     // checkedCount === 0: don't revert to not_started
 
     if (newStatus) {
-      console.error(
-        `[toggleChecklistItem] Updating iteration ${iterationId} status: ${currentStatus} → ${newStatus} (${checkedCount}/${total} checked)`
-      );
       await supabase
         .from("iterations")
         .update({ status: newStatus })
