@@ -9,13 +9,38 @@ import {
 } from "@/lib/actions";
 import type { IterationAsset } from "@/lib/types";
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+function fileTypeLabel(mimeType: string): string {
+  const map: Record<string, string> = {
+    "application/pdf": "PDF",
+    "text/markdown": "MD",
+    "text/plain": "TXT",
+    "text/csv": "CSV",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "DOCX",
+    "application/msword": "DOC",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "XLSX",
+    "application/vnd.ms-excel": "XLS",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation": "PPTX",
+    "application/vnd.ms-powerpoint": "PPT",
+  };
+  return map[mimeType] ?? mimeType.split("/").pop()?.toUpperCase() ?? "FILE";
+}
+
+const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
 const ACCEPTED_TYPES = [
   "image/png",
   "image/jpeg",
   "image/gif",
   "image/webp",
   "application/pdf",
+  "text/markdown",
+  "text/plain",
+  "text/csv",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "application/vnd.ms-excel",
+  "application/vnd.ms-powerpoint",
+  "application/msword",
 ];
 
 type UploadingFile = {
@@ -51,7 +76,7 @@ export default function AssetUploader({ iterationId, existingAssets }: Props) {
       if (file.size > MAX_FILE_SIZE) {
         setUploading((prev) => [
           ...prev,
-          { id: tempId, name: file.name, progress: 0, error: "File exceeds 10MB limit" },
+          { id: tempId, name: file.name, progress: 0, error: "File exceeds 25MB limit" },
         ]);
         return;
       }
@@ -193,7 +218,7 @@ export default function AssetUploader({ iterationId, existingAssets }: Props) {
           Drop files here or click to browse
         </p>
         <p className="text-xs text-text-caption mt-1">
-          PNG, JPG, GIF, WebP, PDF &middot; Max 10MB
+          PNG, JPG, GIF, WebP, PDF, Markdown, CSV, Word, Excel, PowerPoint &middot; Max 25MB
         </p>
         <input
           ref={fileInputRef}
@@ -277,7 +302,7 @@ export default function AssetUploader({ iterationId, existingAssets }: Props) {
                     />
                   </svg>
                   <span className="text-[10px] text-text-muted truncate max-w-full px-2">
-                    PDF
+                    {fileTypeLabel(asset.file_type)}
                   </span>
                 </a>
               )}
