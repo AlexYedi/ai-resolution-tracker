@@ -85,7 +85,10 @@ export default function AssetUploader({ iterationId, existingAssets }: Props) {
 
       try {
         const supabase = createClient();
-        const storagePath = `${iterationId}/${Date.now()}-${file.name}`;
+        const safeName = file.name
+          .replace(/[^a-zA-Z0-9._-]/g, "_")
+          .replace(/_+/g, "_");
+        const storagePath = `${iterationId}/${Date.now()}-${safeName}`;
 
         setUploading((prev) =>
           prev.map((u) => (u.id === tempId ? { ...u, progress: 30 } : u))
